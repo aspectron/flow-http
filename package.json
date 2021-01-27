@@ -2,21 +2,27 @@
 	"version": "0.1.10",
 	"name": "@aspectron/flow-http",
 	"description": "HTTP server",
-	"main": "index.js",
+	"main": "./dist/index.js",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/aspectron/flow-http"
 	},
 	"license": "MIT",
 	"dependencies": {
+		"@aspectron/flow-async": ">=1.0.0",
+		"@aspectron/flow-router": "^0.1.2",
 		"@aspectron/flow-uid": "*",
-		"@aspectron/flow-async": ">=1.0.0"
+		"@aspectron/flow-connection": "*",
+		"nats": "^2.0.0-215"
 	},
 	"devDependencies": {
 		"eslint": "*",
 		"eslint-config-google": "*",
 		"jsdoc": "*",
-		"flow-jsdoc-template": "git+https://github.com/aspectron/flow-jsdoc-template"
+		"flow-jsdoc-template": "git+https://github.com/aspectron/flow-jsdoc-template",
+		"typescript": "*",
+		"@types/node": "^14.14.9",
+		"ts-node": "^9.0.0"
 	},
 	"scripts": {
 		"docs": "node_modules/.bin/jsdoc --configure .jsdoc.js --verbose"

@@ -1,5 +1,6 @@
 node_modules
 package-lock.json
 docs
-FS.sublime-project
-FS.sublime-workspace
+*.sublime-project
+*.sublime-workspace
+dist
