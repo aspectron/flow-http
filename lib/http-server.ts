@@ -12,8 +12,8 @@ import { RouterConstructor, Router, TransportConstructor, Transport } from "@asp
 //import utils = require("./utils");
 //import { HttpSocketRouter } from './socket-router';
 import { SocketTransport } from "./transport";
-import { HttpFrameworkConstructor, HttpFramework } from './framework';
-
+import { HttpFrameworkConstructor, HttpFramework, HttpFrameworkOptions } from './framework';
+import Colors from '@aspectron/colors.ts';
 // class FlowSocketServerGRPC extends FlowSocketServer {
 
 // }
@@ -22,15 +22,27 @@ import { HttpFrameworkConstructor, HttpFramework } from './framework';
 export interface HttpRequest { [key: string] : any; }
 export interface HttpResponse { [key: string] : any; }
 
+export interface HttpFrameworkOptionsWithType extends HttpFrameworkOptions {
+	type:HttpFrameworkConstructor<HttpFramework>;
+}
+
+export interface HttpSocketOptionsImpl {
+	router:RouterConstructor<Router>;
+	transport:TransportConstructor<SocketTransport>;
+}
 
 export interface FlowHttpOptions {
 	port:number;
 	host?:string;
 	ssl:boolean;
 	maxHttpSockets?:number;
-	framework?:HttpFrameworkConstructor<HttpFramework>;
-	socketRouter?:RouterConstructor<Router>;
-	socketTransport?:TransportConstructor<SocketTransport>;
+//	framework?:HttpFrameworkConstructor<HttpFramework>;
+	framework?:HttpFrameworkOptionsWithType;
+	socket?:HttpSocketOptionsImpl;
+	staticFiles?: [string,string][]|{[key:string]: string};
+
+	// socketRouter?:RouterConstructor<Router>;
+	// socketTransport?:TransportConstructor<SocketTransport>;
 }
 
  
@@ -52,8 +64,10 @@ export class FlowHttp extends EventEmitter{
 
 	server!:HttpServer|HttpsServer;
 	framework!:HttpFramework;
-	socketTransport?:SocketTransport;
-	socketRouter?:Router;
+	socket?:{
+		transport?:SocketTransport;
+		router?:Router;
+	};
 
 	logger:FlowLogger = new FlowLogger('FlowHttp', { custom : ['http:cyan'] });
 	log(...args:any[]) { this.logger.http(...args); }
@@ -64,16 +78,23 @@ export class FlowHttp extends EventEmitter{
 		this.appFolder = appFolder;
 		if(!options.framework)
 			throw new Error(`FlowHttp::constructor() option 'framework' is required, must supply HttpFramework derived class`);
-		this.framework = new options.framework(this);
-console.log(options);
-		if(options.socketRouter) {
-			this.log('creating socketRouter');
-			this.socketRouter = new options.socketRouter(this);
+		// const frameworkOptions : HttpFrameworkOptions = {
+		// 	staticFiles : this.options.staticFiles
+		// };
+		if(options.framework) {
+			this.framework = new options.framework.type(this, options.framework);
+			console.log(options);
 		}
+		if(options.socket) {
 
-		if(options.socketTransport) {
-			this.log('creating socketTransport');
-			this.socketTransport = new options.socketTransport({ flowHttp: this });
+			this.socket = { };
+			this.socket.router = new options.socket.router(this);
+			this.socket.transport = new options.socket.transport({ flowHttp: this, router:this.socket.router });
+
+			// this.log('creating socketRouter');
+			// this.socket.router = new options.socket.router(this);
+			// this.log('creating socketTransport');
+			// this.socket.transport = new options.socket.transport({ flowHttp: this });
 		}
 		//this.pkg = require(path.join(this.appFolder, "package.json"));
 
@@ -94,7 +115,7 @@ console.log(options);
 			const { options } = this;
 			const {port, host, ssl} = options;
 
-
+			console.log("framework init");
 //			this.initExpressApp();
 			await this.framework.init();
 			// this.emit("app.init", {app:this.app});
@@ -105,6 +126,7 @@ console.log(options);
 			globalAgentHttps.maxSockets = options.maxHttpSockets || 1024;
 
 			let CERTIFICATES = false;//ssl && this.certificates;
+			console.log("create args for server");
 
 			let args = [ ]
 			args.push(port);
@@ -116,7 +138,7 @@ console.log(options);
 					return reject(error);
 				}
 
-				this.log(`HTTP server listening on port ${(port+'').bold}  ${host?" host '"+host+"'":''}`);
+				this.log(`HTTP server listening on port ${(port+'').yellow} ${host?" host '"+host+"'":''}`);
 
 				if (!CERTIFICATES)
 					this.log(("WARNING - SSL is currently disabled"));
@@ -126,6 +148,7 @@ console.log(options);
 				resolve();
 			})
 
+			console.log("create server");
 			let server;
 			if(CERTIFICATES){
 				server = createHttpServer(CERTIFICATES, this.framework.getApp());
@@ -134,6 +157,7 @@ console.log(options);
 				server = createHttpsServer(this.framework.getApp());
 			}
 
+			console.log("assign server");
 
 			this.server = server;
 
@@ -143,8 +167,9 @@ console.log(options);
 			// 	this.socketRouter.init({ server, path : this.config.websocketPath});
 			// }
 
-			if(this.socketTransport)
-				await this.socketTransport.start();
+			console.log("init transport");
+			if(this.socket?.transport)
+				await this.socket.transport.start();
 
 
 //			await 
@@ -174,6 +199,7 @@ console.log(options);
 			}
 			*/
 
+			this.log('starting server listen:', args);
 			// @ts-ignore
 			server.listen(...args);
 			//server.listen.apply(server, args);

@@ -8,6 +8,7 @@ export interface SocketTransportOptions extends TransportOptions  {
     // headers:string[];
     //httpServer:HttpServer|HttpsServer;
     flowHttp:FlowHttp;
+    router:Router;
 }
 
 export abstract class SocketTransport extends Transport  {

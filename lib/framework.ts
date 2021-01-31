@@ -7,7 +7,8 @@ export interface HttpSessionInfo {
 
 
 export interface HttpFrameworkOptions {
-	staticFiles: [string,string][]|{[key:string]: string};
+//	type?:HttpFrameworkConstructor<HttpFramework>;
+	staticFiles: [string,string][]|{[key:string]: string}|undefined; 
 }
 
 export abstract class HttpFramework { 
@@ -19,4 +20,5 @@ export abstract class HttpFramework {
 }
 
 export type HttpFrameworkConstructor<T extends HttpFramework> = new (...args: any[]) => T;
+//export type HttpFrameworkConstructorEx<T extends HttpFramework, K extends HttpFrameworkOptions> = new (...args: any[]) => T;
 
