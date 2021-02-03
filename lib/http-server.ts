@@ -143,8 +143,8 @@ export class FlowHttp extends EventEmitter{
 				if (!CERTIFICATES)
 					this.log(("WARNING - SSL is currently disabled"));
 
-					this.emit('server.init', {server:this.server});
-					this.emit('init::http-server', {server:this.server}); // deprecated
+				this.emit('server.init', {server:this.server});
+				this.emit('init::http-server', {server:this.server}); // deprecated
 				resolve();
 			})
 
@@ -154,6 +154,7 @@ export class FlowHttp extends EventEmitter{
 				server = createHttpServer(CERTIFICATES, this.framework.getApp());
 				//this._isSecureServer = true;
 			}else{
+				console.log("app::",this.framework.getApp());
 				server = createHttpsServer(this.framework.getApp());
 			}
 
